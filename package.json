@@ -11,14 +11,21 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "onLanguage:glsl"
     ],
     "main": "./out/extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
+        "configuration": {
+            "type": "object",
+            "title": "GLSL linter configuration",
+            "properties": {
+                "glsl-linter.validatorPath": {
+                    "type": "string",
+                    "default": null,
+                    "description": "Specifies path to the GLSL validator"
+                }
+            }
+        }
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
