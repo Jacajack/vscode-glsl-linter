@@ -55,9 +55,6 @@ class GLSLLinter
             return;
         }
 
-        // FIXME
-        vscode.window.showWarningMessage( "doing linting!" );
-
         // Get configuration
         const config = vscode.workspace.getConfiguration( "glsl-linter" );
         if ( config.validatorPath === null  || config.validatorPath === ""  )
@@ -68,6 +65,8 @@ class GLSLLinter
 
         // These are diagnostic messages for this file
         let diagnostics : vscode.Diagnostic[] = [];
+
+        // TODO determine shader type based on config and extension
 
         // Spawn the validator process
         let validatorArguments = ["-S", "frag", doc.fileName];
@@ -115,20 +114,24 @@ class GLSLLinter
                     {
                         // Parse the error message
                         let matches = line.match( /WARNING:|ERROR:\s(\d*):(\d*): (.*)/ );
-                        console.log( matches );
                         if ( matches && matches.length === 4 )
                         {
                             // Get the matched info
                             let lineNumber = parseInt( matches[2] ) - 1;
                             let message = matches[3];
-                            let lineLength = doc.lineAt( lineNumber ).text.length;
+                            let codeLine = lineNumber < doc.lineCount ? doc.lineAt( lineNumber ).text : "";
+                            let precedingWhitespace = codeLine.search( /\S|$/ );
+                            let lineLength = codeLine.length;
 
                             // Create a diagnostic message
-                            let where = new vscode.Range( lineNumber, 0, lineNumber, lineLength ); //TODO insert proper range here
+                            let where = new vscode.Range(
+                                lineNumber,
+                                precedingWhitespace,
+                                lineNumber,
+                                lineLength
+                            );
                             let diag = new vscode.Diagnostic( where, message, severity );
                             diagnostics.push( diag );
-                            vscode.window.showErrorMessage( validatorOutput );
-
                         }
                     }
                 } );
