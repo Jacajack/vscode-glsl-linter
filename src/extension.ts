@@ -136,6 +136,12 @@ class GLSLLinter
                             let precedingWhitespace = codeLine.search( /\S|$/ );
                             let lineLength = codeLine.length;
 
+                            // This message is useless
+                            if ( message ===  "'' : compilation terminated " )
+                            {
+                                return;
+                            }
+
                             // Create a diagnostic message
                             let where = new vscode.Range(
                                 lineNumber,
