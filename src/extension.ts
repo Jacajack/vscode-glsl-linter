@@ -1,17 +1,10 @@
 'use strict';
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
-
 import * as cp from 'child_process';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
-
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
-    console.log("vscode-glsl-linter is now active!");
+export function activate(context: vscode.ExtensionContext)
+{
+    console.log( "glsl-linter extension is now active" );
 
     // Create a linter class instance and its controller
     let linter = new GLSLLinter( );
@@ -22,8 +15,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push( linterController );
 }
 
-// this method is called when your extension is deactivated
-export function deactivate() {
+export function deactivate()
+{
 }
 
 // Performs GLSL language linting
@@ -37,18 +30,8 @@ class GLSLLinter
     }
 
     // Does the actual linting
-    public lint( )
+    public lint( doc : vscode.TextDocument )
     {
-        // Get editor environment
-        let editor = vscode.window.activeTextEditor;
-        if ( !editor )
-        {
-            return;
-        }
-
-        // Get document
-        let doc = editor.document;
-
         // Only accept GLSL files
         if ( doc.languageId !== "glsl" )
         {
@@ -63,13 +46,43 @@ class GLSLLinter
             return;
         }
 
+        // Try to guess what type of shader we're editing based on file extension
+        let shaderStage : string = "";
+        if ( config.fileExtensions !== null && typeof( config.fileExtensions ) === "object" )
+        {
+            for ( let ext in config.fileExtensions )
+            {
+                let shaderType = config.fileExtensions[ext];
+                if ( doc.fileName.endsWith( ext ) )
+                {
+                    // If the guess would be ambiguous, do not guess
+                    if ( shaderStage === "" )
+                    {
+                        shaderStage = shaderType;
+                    }
+                    else
+                    {
+                        shaderStage = "";
+                        vscode.window.showWarningMessage( "GLSL Linter: current file extension matches at least two shader types!" );
+                    }
+                }
+            }
+        }
+
         // These are diagnostic messages for this file
         let diagnostics : vscode.Diagnostic[] = [];
 
-        // TODO determine shader type based on config and extension
+        // Validator arguments
+        let validatorArguments = [doc.fileName];
+        if ( shaderStage !== "" )
+        {
+            validatorArguments = validatorArguments.concat( ["-S", shaderStage ] );
+        }
+
+        // DEBUG
+        // console.log( validatorArguments.join( " " ) );
 
         // Spawn the validator process
-        let validatorArguments = ["-S", "frag", doc.fileName];
         let validatorProcess = cp.spawn(
                 config.validatorPath,
                 validatorArguments,
@@ -183,6 +196,10 @@ class GLSLLinterController
     // Executed whenever linting shall be done
     private lintTrigger( )
     {
-        this._linter.lint( );
+        let editor = vscode.window.activeTextEditor;
+        if ( editor )
+        {
+            this._linter.lint( editor.document );
+        }
     }
 }

@@ -23,6 +23,11 @@
                     "type": "string",
                     "default": null,
                     "description": "Specifies path to the GLSL validator"
+                },
+                "glsl-linter.fileExtensions": {
+                    "type": "object",
+                    "default": null,
+                    "description": "Specifies extensions for different shader stages. Keys shall be extensions (for example '.vs.glsl')."
                 }
             }
         }
