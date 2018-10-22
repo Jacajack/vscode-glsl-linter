@@ -3,7 +3,7 @@
     "displayName": "GLSL Linter",
     "description": "Provides linting capability for GLSL",
     "version": "1.0.0",
-    "publisher": "jacajack",
+    "publisher": "mrjjot",
     "engines": {
         "vscode": "^1.28.0"
     },
@@ -13,6 +13,10 @@
     "activationEvents": [
         "onLanguage:glsl"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Jacajack/vscode-glsl-linter.git"
+    },
     "main": "./out/extension",
     "contributes": {
         "configuration": {
