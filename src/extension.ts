@@ -81,7 +81,7 @@ class GLSLLinter
         
         const extraValidatorArguments = config.validatorArgs;
         if (extraValidatorArguments) {
-            validatorArguments = validatorArguments.concat(extraValidatorArguments);
+            validatorArguments = validatorArguments.concat(extraValidatorArguments.split(" ");
         }
 
         // DEBUG
