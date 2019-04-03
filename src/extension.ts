@@ -78,6 +78,11 @@ class GLSLLinter
         {
             validatorArguments = validatorArguments.concat( ["-S", shaderStage ] );
         }
+        
+        const extraValidatorArguments = config.validatorArgs;
+        if (extraValidatorArguments) {
+            validatorArguments = validatorArguments.concat(extraValidatorArguments);
+        }
 
         // DEBUG
         // console.log( validatorArguments.join( " " ) );
