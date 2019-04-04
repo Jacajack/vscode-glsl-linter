@@ -2,7 +2,7 @@
     "name": "vscode-glsl-linter",
     "displayName": "GLSL Linter",
     "description": "Provides linting capability for GLSL",
-    "version": "1.1.0",
+    "version": "1.1.1",
     "publisher": "mrjjot",
     "engines": {
         "vscode": "^1.28.0"
