@@ -11,6 +11,7 @@ This extension requires external GLSL reference compiler. You can find it [here]
 ## Extension Settings
  * `glsl-linter.validatorPath` - path to the GLSL validator executable
  * `glsl-linter.fileExtensions` - file extensions along with abbreviated shader stage names (`vert`, `tesc`, `tese`, `geom`, `frag`, `comp`).
+ * `glsl-linter.validatorArgs` - additional arguments for the GLSL validator
 
 Example configuration:
 ```json
