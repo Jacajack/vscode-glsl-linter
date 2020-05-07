@@ -79,13 +79,15 @@ class GLSLLinter
             validatorArguments = validatorArguments.concat( ["-S", shaderStage ] );
         }
 
+        // Extra arguments are prepended
         const extraValidatorArguments = config.validatorArgs;
-        if (extraValidatorArguments) {
-            validatorArguments = validatorArguments.concat( extraValidatorArguments.split(" ") );
+        if (extraValidatorArguments !== null && Array.isArray(extraValidatorArguments))
+        {
+            validatorArguments = validatorArguments.concat(extraValidatorArguments);
         }
 
         // DEBUG
-        // console.log( validatorArguments.join( " " ) );
+        // console.log( validatorArguments.join( "|" ) );
 
         // Spawn the validator process
         let validatorProcess = cp.spawn(
@@ -100,10 +102,31 @@ class GLSLLinter
             let validatorOutput = "";
             validatorProcess.stdout.on( "data", ( data : Buffer ) => { validatorOutput += data; } );
 
-            // When validator finishes its job
-            validatorProcess.stdout.on( "end", () =>
+            /*
+             * It seems that glglangValidators returns 0 when there are no errors,
+             * 1 if there's a problem with the invocation and 2 if there are compilation errors.
+             * Therefore only exit code 1 is handled here.
+             */
+            validatorProcess.on( "exit", (code : Number) =>
+            {
+                // DEBUG
+                // console.log("glslangValidator exit code: " + code);
+
+                if (code == 1)
+                {
+                    vscode.window.showErrorMessage( "GLSL Linter: GLSL validator returned exit code 1!" );
+                    return;
+                }
+            });
+
+            // When validator finishes its job (closes stream)
+            validatorProcess.stdout.on( "close", () =>
             {
                 let lines = validatorOutput.toString( ).split( /(?:\r\n|\r|\n)/g );
+
+                // DEBUG
+                // console.log(validatorOutput.toString());
+                // console.log(lines);
 
                 // Run analysis for each output line
                 lines.forEach( line =>
@@ -130,7 +153,7 @@ class GLSLLinter
                     // Hint severity is used as "no error" here
                     if ( severity !== vscode.DiagnosticSeverity.Hint )
                     {
-                        // Parse the error message
+                        // Parse the error message (if columns are specified)
                         let matches = line.match( /WARNING:|ERROR:\s(\d*):(\d*): (.*)/ );
                         if ( matches && matches.length === 4 )
                         {
@@ -141,12 +164,6 @@ class GLSLLinter
                             let precedingWhitespace = codeLine.search( /\S|$/ );
                             let lineLength = codeLine.length;
 
-                            // This message is useless
-                            if ( message ===  "'' : compilation terminated " )
-                            {
-                                return;
-                            }
-
                             // Create a diagnostic message
                             let where = new vscode.Range(
                                 lineNumber,
@@ -156,6 +173,28 @@ class GLSLLinter
                             );
                             let diag = new vscode.Diagnostic( where, message, severity );
                             diagnostics.push( diag );
+                        }
+                        else
+                        {
+                            // Also handle global messages
+                            matches = line.match( /WARNING:|ERROR: (.*)/ );
+                            if ( matches && matches.length === 2 )
+                            {
+                                // DEBUG
+                                // console.log("found global error");
+
+                                // Get the matched info
+                                let message = matches[1];
+
+                                // Ignore those useless messages
+                                if (message.endsWith("compilation errors.  No code generated."))
+                                    return;
+
+                                // Create a diagnostic message on the 1st char of the file
+                                let where = new vscode.Range(0, 0, 0, 0);
+                                let diag = new vscode.Diagnostic( where, message, severity );
+                                diagnostics.push( diag );
+                            }
                         }
                     }
                 } );
